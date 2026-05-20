@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品 ID 链接自动拼接工具</title>
+    <style>
+        :root {
+            --bg-primary: #f8f9fa;
+            --bg-surface: #ffffff;
+            --bg-element: #fbfbfd;
+            --border-color: #e5e5e5;
+            --text-primary: #1d1d1f;
+            --text-secondary: #86868b;
+            --accent-green: #34c759;
+            --accent-green-hover: #28a745;
+            --accent-blue: #007aff;
+            --accent-red: #ff3b30;
+            --accent-red-hover: #d7261b;
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            padding: 50px 20px;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .container {
+            background-color: var(--bg-surface);
+            width: 100%;
+            max-width: 800px;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 10px 30px rgba(0, 0, 0, 0.02);
+        }
+
+        h2 {
+            text-align: center;
+            color: #111;
+            font-size: 24px;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 35px;
+            letter-spacing: -0.5px;
+        }
+        
+        .input-section {
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .input-section.collapsed {
+            display: none;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .clickable-title {
+            background: none;
+            border: none;
+            color: var(--accent-blue);
+            padding: 0;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: color 0.1s ease;
+        }
+        .clickable-title:hover {
+            color: #0056b3;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 14px;
+            box-sizing: border-box;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+            outline: none;
+            background-color: #fafafa;
+            color: var(--text-primary);
+            transition: border-color 0.1s ease, background-color 0.1s ease;
+        }
+        textarea:focus { 
+            border-color: var(--accent-green); 
+            background-color: var(--bg-surface);
+        }
+        
+        .btn-group { 
+            margin: 20px 0 30px 0; 
+        }
+        .btn-generate { 
+            width: 100%; 
+            background-color: var(--accent-green); 
+            color: white; 
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 500;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.1s ease;
+        }
+        .btn-generate:hover { 
+            background-color: var(--accent-green-hover); 
+        }
+        
+        .controls-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .sort-control, .clear-control {
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.1s ease;
+        }
+        .sort-control:hover { color: var(--accent-blue); }
+        .clear-control:hover { color: var(--accent-red); }
+
+        .result-container {
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            background-color: var(--bg-surface);
+            box-sizing: border-box;
+        }
+        
+        .result-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .result-container::-webkit-scrollbar-thumb {
+            background-color: #e0e0e0;
+            border-radius: 3px;
+        }
+        
+        .empty-placeholder {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 60px 0;
+            font-size: 14px;
+        }
+        
+        .batch-block {
+            border-bottom: 1px solid #eee;
+            background-color: var(--bg-surface);
+        }
+        .batch-block:last-child { 
+            border-bottom: none; 
+        }
+
+        .batch-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            background-color: var(--bg-surface);
+            user-select: none;
+        }
+        .batch-header:hover { 
+            background-color: var(--bg-element); 
+        }
+        
+        .batch-title-clickarea {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            padding-right: 20px;
+        }
+        .batch-title { 
+            font-weight: 500; 
+            font-size: 14px; 
+            color: var(--text-primary); 
+        }
+        .batch-title.custom-green { 
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        .batch-info { 
+            font-size: 13px; 
+            color: var(--text-secondary); 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+        }
+        .fold-icon {
+            font-size: 10px;
+            color: #c7c7cc;
+            transition: transform 0.1s ease;
+        }
+        
+        .batch-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-batch-copy, .btn-batch-delete {
+            background: none;
+            padding: 5px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: all 0.1s ease;
+        }
+
+        .btn-batch-copy {
+            color: var(--accent-blue);
+            border: 1px solid var(--accent-blue);
+        }
+        .btn-batch-copy:hover {
+            background-color: var(--accent-blue);
+            color: white;
+        }
+
+        .btn-batch-delete {
+            color: var(--text-secondary);
+            border: 1px solid #d2d2d7;
+        }
+        .btn-batch-delete:hover {
+            color: white;
+            border-color: var(--accent-red);
+            background-color: var(--accent-red);
+        }
+
+        .batch-body { 
+            padding: 0 20px 15px 20px; 
+            background-color: var(--bg-surface); 
+            max-height: 320px; 
+            overflow-y: auto; 
+        }
+        .batch-body.collapsed { 
+            display: none; 
+        } 
+
+        .result-item {
+            display: table;
+            width: 100%;
+            background: var(--bg-element);
+            padding: 10px 14px;
+            margin-bottom: 6px;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .result-item:last-child { margin-bottom: 0; }
+        
+        .index-num { 
+            display: table-cell; 
+            vertical-align: middle; 
+            width: 25px; 
+            color: var(--text-secondary); 
+            font-size: 13px; 
+        }
+        .link-text-wrapper { 
+            display: table-cell; 
+            vertical-align: middle; 
+            word-break: break-all; 
+            padding-right: 15px; 
+        }
+        .link-text a { 
+            color: var(--text-primary); 
+            text-decoration: none; 
+            font-size: 13px; 
+        }
+        .link-text a:hover {
+            color: var(--accent-blue);
+        }
+        .group-tag { 
+            display: block; 
+            font-size: 11px; 
+            color: var(--text-secondary); 
+            margin-top: 3px; 
+            font-style: normal; 
+        }
+        
+        .btn-inner-copy { 
+            display: table-cell; 
+            vertical-align: middle; 
+            width: 60px; 
+            text-align: right; 
+        }
+        .btn-inner-copy button {
+            padding: 4px 10px; 
+            font-size: 12px; 
+            background: none; 
+            color: var(--text-secondary); 
+            border: 1px solid #d2d2d7; 
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.1s ease;
+        }
+        .btn-inner-copy button:hover { 
+            border-color: var(--text-secondary);
+            color: var(--text-primary);
+        }
+        .btn-inner-copy button.copied { 
+            background-color: #e8f5e9 !important; 
+            color: var(--accent-green) !important; 
+            border-color: var(--accent-green) !important; 
+        }
+
+        .toast-message {
+            position: fixed; 
+            top: 30px; 
+            left: 50%; 
+            transform: translateX(-50%) translateY(-10px);
+            background-color: var(--text-primary); 
+            color: #fff; 
+            padding: 10px 20px; 
+            border-radius: 6px;
+            font-size: 14px; 
+            z-index: 9999; 
+            opacity: 0; 
+            transition: opacity 0.1s ease, transform 0.1s ease; 
+            pointer-events: none;
+        }
+        .toast-message.show { 
+            transform: translateX(-50%) translateY(0); 
+            opacity: 1; 
+        }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.2); display: flex; justify-content: center; align-items: center;
+            z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.1s ease;
+        }
+        .modal-overlay.show { opacity: 1; visibility: visible; }
+        .modal-content {
+            background: var(--bg-surface); width: 90%; max-width: 400px; padding: 30px;
+            border-radius: 8px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); transform: scale(0.95); transition: transform 0.1s ease;
+        }
+        .modal-overlay.show .modal-content { transform: scale(1); }
+        .modal-content h3 { margin-top: 0; color: var(--text-primary); font-size: 16px; font-weight: 600; margin-bottom: 20px; }
+        .modal-content input {
+            width: 100%; padding: 12px; box-sizing: border-box; border: 1px solid var(--border-color);
+            border-radius: 6px; font-size: 14px; outline: none; margin-bottom: 20px;
+            background-color: #fafafa; color: var(--text-primary);
+        }
+        .modal-content input:focus { border-color: var(--accent-green); background-color: var(--bg-surface); }
+        
+        .smart-extract-box {
+            background-color: #f5f5f7;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .extract-left {
+            font-size: 13px;
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+        .btn-use-extract {
+            background: none;
+            color: var(--accent-blue);
+            font-size: 13px;
+            cursor: pointer;
+            border: none;
+            padding: 0;
+        }
+
+        .modal-btns { display: flex; justify-content: flex-end; gap: 12px; }
+        .modal-btns button { padding: 10px 16px; font-size: 14px; border-radius: 6px; border: none; cursor: pointer; }
+        .btn-cancel { background: #f5f5f7; color: var(--text-secondary); }
+        .btn-cancel:hover { background: #e8e8ed; color: var(--text-primary); }
+        .btn-confirm { background: var(--accent-green); color: #fff; }
+        .btn-confirm:hover { background: var(--accent-green-hover); }
+    </style>
+</head>
+<body>
+
+<div id="toast" class="toast-message"></div>
+
+<div id="remarkModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3>添加批次备注</h3>
+        
+        <div id="smartExtractBox" class="smart-extract-box" style="display: none;">
+            <div class="extract-left">
+                检测到文本：<span id="extractedChineseText" style="font-weight:500;"></span>
+            </div>
+            <button class="btn-use-extract" onclick="applyExtractedText()">直接使用</button>
+        </div>
+
+        <input type="text" id="modalRemarkInput" placeholder="输入备注（可选）">
+        <div class="modal-btns">
+            <button class="btn-cancel" onclick="closeModal()">取消</button>
+            <button class="btn-cancel" style="background:none;" onclick="submitBatch('')">跳过</button>
+            <button class="btn-confirm" onclick="submitBatch(document.getElementById('modalRemarkInput').value)">确认</button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <h2>商品 ID 链接自动拼接工具</h2>
+    
+    <div>
+        <div class="section-header">
+            <button class="clickable-title" onclick="toggleInputSectionManual()">输入商品 ID <span id="titleArrow">▼</span></button>
+        </div>
+        
+        <div id="inputSection" class="input-section">
+            <textarea id="inputId" placeholder="支持粘贴多行，可混合汉字分组标记（例如：上衣 703580740769 爆款）"></textarea>
+        </div>
+    </div>
+
+    <div class="btn-group">
+        <button class="btn-generate" onclick="handleGenerateClick()">生成当前批次链接</button>
+    </div>
+
+    <div>
+        <div class="section-header" style="margin-bottom: 12px;">
+            <label style="font-weight: 500; font-size: 14px; color: var(--text-primary);">转换结果</label>
+            <div class="controls-right">
+                <div id="sortBtn" class="sort-control" onclick="toggleSortOrder()">最新在上</div>
+                <div class="clear-control" onclick="clearAllData()">清空缓存</div>
+            </div>
+        </div>
+        
+        <div id="resultContainer" class="result-container">
+            <div class="empty-placeholder">暂无生成的批次数据</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const PREFIX = "https://mobile.yangkeduo.com/goods.html?goods_id=";
+    const STORAGE_KEY = "PDD_LINK_GENERATOR_DATA";
+    const COUNTER_KEY = "PDD_LINK_GENERATOR_COUNTER";
+    const INPUT_STATE_KEY = "PDD_INPUT_SECTION_COLLAPSED"; 
+
+    let batches = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    let batchCounter = parseInt(localStorage.getItem(COUNTER_KEY)) || 1;
+    let isDescending = true; 
+    let tempParsedItems = []; 
+    let autoExtractedRemark = ""; 
+
+    window.onload = function() {
+        renderBatches();
+        let shouldCollapse = localStorage.getItem(INPUT_STATE_KEY) === "true";
+        applyInputSectionState(shouldCollapse);
+    };
+
+    function saveDataToStorage() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(batches));
+        localStorage.setItem(COUNTER_KEY, batchCounter.toString());
+    }
+
+    function showToast(message, isError = false) {
+        const toast = document.getElementById('toast');
+        toast.innerText = message;
+        toast.style.borderLeft = isError ? '3px solid var(--accent-red)' : '3px solid var(--accent-green)';
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 1200);
+    }
+
+    function applyInputSectionState(isCollapse) {
+        const section = document.getElementById('inputSection');
+        const arrow = document.getElementById('titleArrow');
+        if (isCollapse) {
+            section.classList.add('collapsed');
+            arrow.innerText = '▶';
+        } else {
+            section.classList.remove('collapsed');
+            arrow.innerText = '▼';
+        }
+        localStorage.setItem(INPUT_STATE_KEY, isCollapse);
+    }
+
+    function toggleInputSectionManual() {
+        const section = document.getElementById('inputSection');
+        applyInputSectionState(!section.classList.contains('collapsed'));
+    }
+
+    function handleGenerateClick() {
+        const inputText = document.getElementById('inputId').value;
+        const lines = inputText.split('\n');
+        tempParsedItems = [];
+        let allChineseWords = [];
+
+        for (let i = 0; i < lines.length; i++) {
+            const tokens = lines[i].split(/[\s,，;；、|]+/);
+            for (let j = 0; j < tokens.length; j++) {
+                const cleanToken = tokens[j].trim();
+                if (!cleanToken || /[a-zA-Z]/.test(cleanToken)) continue;
+                
+                const chineseWords = cleanToken.match(/[\u4e00-\u9fa5]+/g);
+                if (chineseWords) {
+                    allChineseWords.push(chineseWords.join(''));
+                }
+
+                const digitsMatch = cleanToken.match(/\d+/);
+                if (digitsMatch) {
+                    tempParsedItems.push({
+                        id: digitsMatch[0],
+                        tag: chineseWords ? chineseWords.join(' ') : '',
+                        isCopied: false 
+                    });
+                }
+            }
+        }
+
+        if (tempParsedItems.length === 0) {
+            showToast('未检测到有效商品 ID', true);
+            return;
+        }
+
+        if (allChineseWords.length > 0) {
+            autoExtractedRemark = [...new Set(allChineseWords)].join(' ').trim(); 
+        } else {
+            autoExtractedRemark = "";
+        }
+
+        document.getElementById('modalRemarkInput').value = '';
+        const extractBox = document.getElementById('smartExtractBox');
+        
+        if (autoExtractedRemark) {
+            document.getElementById('extractedChineseText').innerText = `"${autoExtractedRemark}"`;
+            extractBox.style.display = 'flex';
+        } else {
+            extractBox.style.display = 'none';
+        }
+
+        document.getElementById('remarkModal').classList.add('show');
+        document.getElementById('modalRemarkInput').focus();
+    }
+
+    function applyExtractedText() {
+        if (autoExtractedRemark) {
+            document.getElementById('modalRemarkInput').value = autoExtractedRemark;
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('remarkModal').classList.remove('show');
+    }
+
+    function submitBatch(remarkText) {
+        closeModal();
+        
+        const newBatch = {
+            batchId: batchCounter++,
+            remark: remarkText.trim(),
+            items: tempParsedItems,
+            timestamp: Date.now(),
+            isCollapsed: true 
+        };
+        
+        batches.push(newBatch); 
+        saveDataToStorage(); 
+        
+        document.getElementById('inputId').value = ''; 
+        applyInputSectionState(true); 
+        renderBatches(); 
+        showToast(`第 ${newBatch.batchId} 批次已生成`);
+    }
+
+    function toggleSortOrder() {
+        if (batches.length === 0) return;
+        isDescending = !isDescending;
+        document.getElementById('sortBtn').innerText = isDescending ? '最新在上' : '最早在上';
+        renderBatches(); 
+    }
+
+    function toggleBatchBody(headerClickAreaElement, batchId) {
+        const bodyElement = headerClickAreaElement.parentElement.nextElementSibling;
+        const iconElement = headerClickAreaElement.querySelector('.fold-icon');
+        const targetBatch = batches.find(b => b.batchId === batchId);
+
+        if (bodyElement.classList.contains('collapsed')) {
+            bodyElement.classList.remove('collapsed');
+            iconElement.style.transform = 'rotate(90deg)';
+            if (targetBatch) targetBatch.isCollapsed = false; 
+        } else {
+            bodyElement.classList.add('collapsed');
+            iconElement.style.transform = 'rotate(0deg)';
+            if (targetBatch) targetBatch.isCollapsed = true;  
+        }
+        saveDataToStorage(); 
+    }
+
+    function copySingleBatchLinks(event, batchId) {
+        event.stopPropagation(); 
+        
+        const targetBatch = batches.find(b => b.batchId === batchId);
+        if (!targetBatch || targetBatch.items.length === 0) return;
+
+        let localLinks = [];
+        for (let i = 0; i < targetBatch.items.length; i++) {
+            localLinks.push(PREFIX + targetBatch.items[i].id);
+            targetBatch.items[i].isCopied = true;
+        }
+
+        navigator.clipboard.writeText(localLinks.join('\n')).then(() => {
+            showToast(`已复制该批次全部 ${localLinks.length} 条链接`);
+            saveDataToStorage();
+            renderBatches(); 
+        }).catch(() => {
+            showToast('复制失败，请重试', true);
+        });
+    }
+
+    function deleteSingleBatch(event, batchId) {
+        event.stopPropagation();
+        if (!confirm(`确定要删除该批次数据吗？`)) return;
+
+        batches = batches.filter(b => b.batchId !== batchId);
+        saveDataToStorage();
+        renderBatches();
+        showToast('批次已删除');
+    }
+
+    function renderBatches() {
+        const container = document.getElementById('resultContainer');
+        if (batches.length === 0) {
+            container.innerHTML = '<div class="empty-placeholder">暂无生成的批次数据</div>';
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+        const renderList = isDescending ? [...batches].reverse() : [...batches];
+
+        for (let i = 0; i < renderList.length; i++) {
+            const batch = renderList[i];
+            const batchDiv = document.createElement('div');
+            batchDiv.className = 'batch-block';
+
+            const isCustom = batch.remark !== '';
+            const titleText = isCustom ? `备注: ${batch.remark}` : `第 ${batch.batchId} 批次`;
+            const collapsedClass = batch.isCollapsed ? 'collapsed' : '';
+            const iconStyle = batch.isCollapsed ? '' : 'style="transform: rotate(90deg);"';
+
+            batchDiv.innerHTML = `
+                <div class="batch-header">
+                    <div class="batch-title-clickarea" onclick="toggleBatchBody(this, ${batch.batchId})">
+                        <div class="batch-title ${isCustom ? 'custom-green' : ''}">${titleText}</div>
+                        <div class="batch-info">
+                            <span>${batch.items.length} 条链接</span>
+                            <span class="fold-icon" ${iconStyle}>▶</span>
+                        </div>
+                    </div>
+                    <div class="batch-actions">
+                        <button class="btn-batch-copy" onclick="copySingleBatchLinks(event, ${batch.batchId})">复制此批次</button>
+                        <button class="btn-batch-delete" onclick="deleteSingleBatch(event, ${batch.batchId})">删除</button>
+                    </div>
+                </div>
+                <div class="batch-body ${collapsedClass}"></div>
+            `;
+
+            const bodyDiv = batchDiv.querySelector('.batch-body');
+
+            for (let j = 0; j < batch.items.length; j++) {
+                const item = batch.items[j];
+                const finalLink = PREFIX + item.id;
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'result-item';
+
+                itemDiv.innerHTML = `
+                    <span class="index-num">${j + 1}</span>
+                    <div class="link-text-wrapper">
+                        <div class="link-text"><a href="${finalLink}" target="_blank">${finalLink}</a></div>
+                        ${item.tag ? `<i class="group-tag">${item.tag}</i>` : ''}
+                    </div>
+                    <div class="btn-inner-copy">
+                        <button class="${item.isCopied ? 'copied' : ''}">${item.isCopied ? '已复制' : '复制'}</button>
+                    </div>
+                `;
+
+                itemDiv.querySelector('button').onclick = function() {
+                    executeCopy(finalLink, this, batch.batchId, item.id);
+                };
+
+                bodyDiv.appendChild(itemDiv);
+            }
+
+            fragment.appendChild(batchDiv);
+        }
+
+        container.innerHTML = '';
+        container.appendChild(fragment);
+    }
+
+    function executeCopy(text, buttonElement, batchId, itemId) {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('链接已复制');
+            buttonElement.innerText = '已复制';
+            buttonElement.classList.add('copied');
+            const targetBatch = batches.find(b => b.batchId === batchId);
+            if (targetBatch) {
+                const targetItem = targetBatch.items.find(i => i.id === itemId);
+                if (targetItem) targetItem.isCopied = true;
+            }
+            saveDataToStorage(); 
+        }).catch(() => {
+            showToast('复制失败', true);
+        });
+    }
+
+    function clearAllData() {
+        if (batches.length === 0) return;
+        if (confirm('确定要清除本地所有的历史批次和记录吗？')) {
+            batches = [];
+            batchCounter = 1;
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem(COUNTER_KEY);
+            localStorage.removeItem(INPUT_STATE_KEY);
+            applyInputSectionState(false);
+            renderBatches();
+            showToast('缓存已清空');
+        }
+    }
+</script>
+
+</body>
+</html>
