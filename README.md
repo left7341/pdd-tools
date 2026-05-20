@@ -1,2 +1,2 @@
 # pdd-tools
-test_tools
+仅供测试使用, 不涉及任何敏感信息
