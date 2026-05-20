@@ -194,9 +194,9 @@
             font-size: 14px; 
             color: var(--text-primary); 
         }
-        .batch-title.custom-green { 
-            color: var(--text-primary);
+        .batch-title.custom-title { 
             font-weight: 600;
+            color: #111;
         }
         .batch-info { 
             font-size: 13px; 
@@ -409,7 +409,7 @@
             <button class="btn-use-extract" onclick="applyExtractedText()">直接使用</button>
         </div>
 
-        <input type="text" id="modalRemarkInput" placeholder="输入备注（可选）">
+        <input type="text" id="modalRemarkInput" placeholder="输入备注（不填则默认为 test）">
         <div class="modal-btns">
             <button class="btn-cancel" onclick="closeModal()">取消</button>
             <button class="btn-cancel" style="background:none;" onclick="submitBatch('')">跳过</button>
@@ -565,9 +565,12 @@
     function submitBatch(remarkText) {
         closeModal();
         
+        // 如果填了内容就直接用内容，否则使用默认值 "test"
+        const finalTitle = remarkText.trim() !== '' ? remarkText.trim() : 'test';
+        
         const newBatch = {
             batchId: batchCounter++,
-            remark: remarkText.trim(),
+            remark: finalTitle, 
             items: tempParsedItems,
             timestamp: Date.now(),
             isCollapsed: true 
@@ -579,7 +582,7 @@
         document.getElementById('inputId').value = ''; 
         applyInputSectionState(true); 
         renderBatches(); 
-        showToast(`第 ${newBatch.batchId} 批次已生成`);
+        showToast(`新批次已生成`);
     }
 
     function toggleSortOrder() {
@@ -652,15 +655,14 @@
             const batchDiv = document.createElement('div');
             batchDiv.className = 'batch-block';
 
-            const isCustom = batch.remark !== '';
-            const titleText = isCustom ? `备注: ${batch.remark}` : `第 ${batch.batchId} 批次`;
+            const titleText = batch.remark; // 标题直接使用备注或默认的 test
             const collapsedClass = batch.isCollapsed ? 'collapsed' : '';
             const iconStyle = batch.isCollapsed ? '' : 'style="transform: rotate(90deg);"';
 
             batchDiv.innerHTML = `
                 <div class="batch-header">
                     <div class="batch-title-clickarea" onclick="toggleBatchBody(this, ${batch.batchId})">
-                        <div class="batch-title ${isCustom ? 'custom-green' : ''}">${titleText}</div>
+                        <div class="batch-title custom-title">${titleText}</div>
                         <div class="batch-info">
                             <span>${batch.items.length} 条链接</span>
                             <span class="fold-icon" ${iconStyle}>▶</span>
@@ -719,7 +721,7 @@
             }
             saveDataToStorage(); 
         }).catch(() => {
-            showToast('复制失败', true);
+            showToast('复制失败，请重试', true);
         });
     }
 
