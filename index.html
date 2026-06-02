@@ -164,11 +164,18 @@
         .batch-block {
             border-bottom: 1px solid #eee;
             background-color: var(--bg-surface);
-            transition: background-color 0.2s ease;
+            transition: background-color 0.2s ease, z-index 0.1s ease;
             position: relative;
+            /* 赋予初始层级，防错 */
+            z-index: 1; 
         }
         .batch-block:last-child { 
             border-bottom: none; 
+        }
+        
+        /* 关键修复：当选色气泡处于激活显示状态时，强制拉高这一批次行的层级 */
+        .batch-block.popover-active {
+            z-index: 50 !important;
         }
 
         .batch-header {
@@ -217,12 +224,12 @@
             background: #ffffff;
             border: 1px solid #e5e5e5;
             border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
             padding: 8px;
             display: none;
             gap: 6px;
             grid-template-columns: repeat(4, 1fr);
-            z-index: 100;
+            z-index: 999;
         }
         .color-palette-popover.show {
             display: grid;
@@ -422,24 +429,11 @@
         }
 
         .toast-message {
-            position: fixed; 
-            top: 30px; 
-            left: 50%; 
-            transform: translateX(-50%) translateY(-10px);
-            background-color: var(--text-primary); 
-            color: #fff; 
-            padding: 10px 20px; 
-            border-radius: 6px;
-            font-size: 14px; 
-            z-index: 9999; 
-            opacity: 0; 
-            transition: opacity 0.1s ease, transform 0.1s ease; 
-            pointer-events: none;
+            position: fixed; top: 30px; left: 50%; transform: translateX(-50%) translateY(-10px);
+            background-color: var(--text-primary); color: #fff; padding: 10px 20px; border-radius: 6px;
+            font-size: 14px; z-index: 9999; opacity: 0; transition: opacity 0.1s ease, transform 0.1s ease; pointer-events: none;
         }
-        .toast-message.show { 
-            transform: translateX(-50%) translateY(0); 
-            opacity: 1; 
-        }
+        .toast-message.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -454,36 +448,14 @@
         .modal-overlay.show .modal-content { transform: scale(1); }
         .modal-content h3 { margin-top: 0; color: var(--text-primary); font-size: 16px; font-weight: 600; margin-bottom: 20px; }
         
-        /* 弹窗中的颜色选择面板 */
-        .modal-color-section {
-            margin-bottom: 20px;
-        }
-        .modal-color-label {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-            display: block;
-        }
-        .modal-color-list {
-            display: flex;
-            gap: 10px;
-        }
+        .modal-color-section { margin-bottom: 20px; }
+        .modal-color-label { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; display: block; }
+        .modal-color-list { display: flex; gap: 10px; }
         .modal-color-cell {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            cursor: pointer;
-            border: 2px solid transparent;
-            box-sizing: border-box;
-            transition: transform 0.1s ease;
+            width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; box-sizing: border-box; transition: transform 0.1s ease;
         }
-        .modal-color-cell:hover {
-            transform: scale(1.1);
-        }
-        .modal-color-cell.active {
-            border-color: var(--text-primary);
-            transform: scale(1.1);
-        }
+        .modal-color-cell:hover { transform: scale(1.1); }
+        .modal-color-cell.active { border-color: var(--text-primary); transform: scale(1.1); }
 
         .modal-content input {
             width: 100%; padding: 12px; box-sizing: border-box; border: 1px solid var(--border-color);
@@ -493,28 +465,10 @@
         .modal-content input:focus { border-color: var(--accent-green); background-color: var(--bg-surface); }
         
         .smart-extract-box {
-            background-color: #f5f5f7;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
+            background-color: #f5f5f7; padding: 12px; border-radius: 6px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
         }
-        .extract-left {
-            font-size: 13px;
-            color: var(--text-primary);
-            line-height: 1.4;
-        }
-        .btn-use-extract {
-            background: none;
-            color: var(--accent-blue);
-            font-size: 13px;
-            cursor: pointer;
-            border: none;
-            padding: 0;
-        }
+        .extract-left { font-size: 13px; color: var(--text-primary); line-height: 1.4; }
+        .btn-use-extract { background: none; color: var(--accent-blue); font-size: 13px; cursor: pointer; border: none; padding: 0; }
 
         .modal-btns { display: flex; justify-content: flex-end; gap: 12px; }
         .modal-btns button { padding: 10px 16px; font-size: 14px; border-radius: 6px; border: none; cursor: pointer; }
@@ -592,16 +546,15 @@
     const COUNTER_KEY = "PDD_LINK_GENERATOR_COUNTER";
     const INPUT_STATE_KEY = "PDD_INPUT_SECTION_COLLAPSED"; 
 
-    // 八种高级精选浅色（莫兰迪/马卡龙色系）
     const PRESET_COLORS = [
-        { name: 'none', primary: '#ffffff', bg: '#ffffff' },        // 无/白色
-        { name: 'red', primary: '#ffb3b3', bg: '#fff2f2' },         // 浅红
-        { name: 'orange', primary: '#ffd1b3', bg: '#fff8f2' },      // 浅橙
-        { name: 'yellow', primary: '#ffe699', bg: '#fffdf2' },      // 浅黄
-        { name: 'green', primary: '#b3e6b3', bg: '#f2fbf2' },       // 浅绿
-        { name: 'cyan', primary: '#b3f0f0', bg: '#f2fcfc' },        // 浅青
-        { name: 'blue', primary: '#b3d1ff', bg: '#f2f7ff' },        // 浅蓝
-        { name: 'purple', primary: '#e6b3ff', bg: '#fbf2ff' }       // 浅紫
+        { name: 'none', primary: '#ffffff', bg: '#ffffff' },
+        { name: 'red', primary: '#ffb3b3', bg: '#fff2f2' },
+        { name: 'orange', primary: '#ffd1b3', bg: '#fff8f2' },
+        { name: 'yellow', primary: '#ffe699', bg: '#fffdf2' },
+        { name: 'green', primary: '#b3e6b3', bg: '#f2fbf2' },
+        { name: 'cyan', primary: '#b3f0f0', bg: '#f2fcfc' },
+        { name: 'blue', primary: '#b3d1ff', bg: '#f2f7ff' },
+        { name: 'purple', primary: '#e6b3ff', bg: '#fbf2ff' }
     ];
 
     let batches = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
@@ -609,7 +562,7 @@
     let isDescending = true; 
     let tempParsedItems = []; 
     let autoExtractedRemark = ""; 
-    let selectedModalColorName = 'none'; // 弹窗中默认选中的颜色名
+    let selectedModalColorName = 'none';
 
     window.onload = function() {
         renderBatches();
@@ -617,9 +570,10 @@
         applyInputSectionState(shouldCollapse);
         initModalColors();
 
-        // 点击页面其他空白处关闭颜色弹窗
+        // 全局点击清空状态
         document.addEventListener('click', function() {
             document.querySelectorAll('.color-palette-popover').forEach(p => p.classList.remove('show'));
+            document.querySelectorAll('.batch-block').forEach(b => b.classList.remove('popover-active'));
         });
     };
 
@@ -654,7 +608,6 @@
         applyInputSectionState(!section.classList.contains('collapsed'));
     }
 
-    // 初始化弹窗中的颜色选择按钮
     function initModalColors() {
         const container = document.getElementById('modalColorList');
         container.innerHTML = '';
@@ -723,7 +676,6 @@
             extractBox.style.display = 'none';
         }
 
-        // 重置弹窗颜色为默认“无色”
         selectedModalColorName = 'none';
         initModalColors();
 
@@ -743,7 +695,6 @@
 
     function submitBatch(remarkText) {
         closeModal();
-        
         const finalTitle = remarkText.trim() !== '' ? remarkText.trim() : 'test';
         
         const newBatch = {
@@ -752,7 +703,7 @@
             items: tempParsedItems,
             timestamp: Date.now(),
             isCollapsed: true,
-            colorName: selectedModalColorName // 保存选择的颜色代号
+            colorName: selectedModalColorName
         };
         
         batches.push(newBatch); 
@@ -788,43 +739,45 @@
         saveDataToStorage(); 
     }
 
-    // 打开局部修改颜色面板
+    // 打开局部修改颜色面板 (加入了层级拉高的修复核心逻辑)
     function openInlineColorPicker(event, batchId) {
-        event.stopPropagation(); // 阻断折叠面板触发
+        event.stopPropagation(); 
         
-        // 先关闭其它打开的面板
+        // 先移除所有行的激活标记并隐藏气泡
         document.querySelectorAll('.color-palette-popover').forEach(p => p.classList.remove('show'));
+        document.querySelectorAll('.batch-block').forEach(b => b.classList.remove('popover-active'));
         
-        const popover = event.target.querySelector('.color-palette-popover');
+        const popover = event.currentTarget.querySelector('.color-palette-popover');
         if (popover) {
             popover.classList.add('show');
+            // 顺着触控点，找到最外层所属的 .batch-block，加上高 z-index 状态
+            const block = event.currentTarget.closest('.batch-block');
+            if (block) {
+                block.classList.add('popover-active');
+            }
         }
     }
 
-    // 修改特定批次的颜色
     function changeBatchColor(event, batchId, colorName) {
         event.stopPropagation();
         const targetBatch = batches.find(b => b.batchId === batchId);
         if (targetBatch) {
             targetBatch.colorName = colorName;
             saveDataToStorage();
-            renderBatches(); // 重新渲染刷新颜色
+            renderBatches(); 
         }
     }
 
-    // 开启双击编辑备注状态
     function startEditRemark(event, batchId) {
         event.stopPropagation();
         const container = event.currentTarget;
         const titleEl = container.querySelector('.batch-title');
         const currentText = titleEl.innerText;
         
-        // 隐藏原文字和提示
         titleEl.style.display = 'none';
         const tipEl = container.querySelector('.edit-tip');
         if (tipEl) tipEl.style.display = 'none';
 
-        // 创建临时输入框
         const input = document.createElement('input');
         input.type = 'text';
         input.className = 'batch-title-input';
@@ -835,7 +788,6 @@
         input.focus();
         input.select();
 
-        // 绑定失去焦点（点击空白处）自动保存事件
         input.onblur = function() {
             const newText = input.value.trim() !== '' ? input.value.trim() : 'test';
             const targetBatch = batches.find(b => b.batchId === batchId);
@@ -846,7 +798,6 @@
             renderBatches();
         };
 
-        // 支持回车保存
         input.onkeydown = function(e) {
             if (e.key === 'Enter') {
                 input.blur();
@@ -856,7 +807,6 @@
 
     function copySingleBatchLinks(event, batchId) {
         event.stopPropagation(); 
-        
         const targetBatch = batches.find(b => b.batchId === batchId);
         if (!targetBatch || targetBatch.items.length === 0) return;
 
@@ -900,7 +850,6 @@
             const batchDiv = document.createElement('div');
             batchDiv.className = 'batch-block';
 
-            // 根据配置的颜色代号匹配整行背景及圆点色
             const colorConfig = PRESET_COLORS.find(c => c.name === (batch.colorName || 'none')) || PRESET_COLORS[0];
             batchDiv.style.backgroundColor = colorConfig.bg;
 
@@ -908,7 +857,6 @@
             const collapsedClass = batch.isCollapsed ? 'collapsed' : '';
             const iconStyle = batch.isCollapsed ? '' : 'style="transform: rotate(90deg);"';
 
-            // 构建弹出的调色盘 HTML
             let popoverHtml = `<div class="color-palette-popover">`;
             PRESET_COLORS.forEach(c => {
                 popoverHtml += `<div class="color-cell" style="background-color: ${c.primary};" onclick="changeBatchColor(event, ${batch.batchId}, '${c.name}')"></div>`;
