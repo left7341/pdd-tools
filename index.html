@@ -5,41 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>商品 ID 链接自动拼接工具</title>
     <style>
-        :root {
-            --bg-primary: #f8f9fa;
-            --bg-surface: #ffffff;
-            --bg-element: #fbfbfd;
-            --border-color: #e5e5e5;
-            --text-primary: #1d1d1f;
-            --text-secondary: #86868b;
-            --accent-green: #34c759;
-            --accent-green-hover: #28a745;
-            --accent-blue: #007aff;
-            --accent-red: #ff3b30;
-            --accent-red-hover: #d7261b;
-            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        }
-
         body {
-            font-family: var(--font-sans);
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #212529;
             padding: 50px 20px;
             margin: 0;
             display: flex;
             justify-content: center;
-            -webkit-font-smoothing: antialiased;
         }
-        
         .container {
-            background-color: var(--bg-surface);
+            background-color: #fff;
             width: 100%;
             max-width: 800px;
             padding: 40px;
             border-radius: 8px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 10px 30px rgba(0, 0, 0, 0.02);
         }
-
         h2 {
             text-align: center;
             color: #111;
@@ -68,7 +50,7 @@
         .clickable-title {
             background: none;
             border: none;
-            color: var(--accent-blue);
+            color: #007aff;
             padding: 0;
             font-size: 14px;
             font-weight: 500;
@@ -76,7 +58,6 @@
             display: inline-flex;
             align-items: center;
             gap: 4px;
-            transition: color 0.1s ease;
         }
         .clickable-title:hover {
             color: #0056b3;
@@ -87,20 +68,18 @@
             height: 120px;
             padding: 14px;
             box-sizing: border-box;
-            border: 1px solid var(--border-color);
+            border: 1px solid #e5e5e5;
             border-radius: 6px;
-            font-family: inherit;
             font-size: 14px;
             line-height: 1.6;
             resize: vertical;
             outline: none;
             background-color: #fafafa;
-            color: var(--text-primary);
-            transition: border-color 0.1s ease, background-color 0.1s ease;
+            transition: border-color 0.15s ease, background-color 0.15s ease;
         }
         textarea:focus { 
-            border-color: var(--accent-green); 
-            background-color: var(--bg-surface);
+            border-color: #34c759; 
+            background-color: #fff;
         }
         
         .btn-group { 
@@ -108,7 +87,7 @@
         }
         .btn-generate { 
             width: 100%; 
-            background-color: var(--accent-green); 
+            background-color: #34c759; 
             color: white; 
             padding: 14px;
             font-size: 15px;
@@ -116,10 +95,10 @@
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            transition: background-color 0.1s ease;
+            transition: background-color 0.15s ease;
         }
         .btn-generate:hover { 
-            background-color: var(--accent-green-hover); 
+            background-color: #28a745; 
         }
         
         .controls-right {
@@ -129,23 +108,22 @@
         }
         .sort-control, .clear-control {
             font-size: 13px;
-            color: var(--text-secondary);
+            color: #86868b;
             cursor: pointer;
             user-select: none;
-            transition: color 0.1s ease;
+            transition: color 0.15s ease;
         }
-        .sort-control:hover { color: var(--accent-blue); }
-        .clear-control:hover { color: var(--accent-red); }
+        .sort-control:hover { color: #007aff; }
+        .clear-control:hover { color: #ff3b30; }
 
         .result-container {
             max-height: 500px;
             overflow-y: auto;
             border: 1px solid #eee;
             border-radius: 6px;
-            background-color: var(--bg-surface);
+            background-color: #fff;
             box-sizing: border-box;
         }
-        
         .result-container::-webkit-scrollbar {
             width: 6px;
         }
@@ -156,26 +134,17 @@
         
         .empty-placeholder {
             text-align: center;
-            color: var(--text-secondary);
+            color: #86868b;
             padding: 60px 0;
             font-size: 14px;
         }
         
         .batch-block {
             border-bottom: 1px solid #eee;
-            background-color: var(--bg-surface);
-            transition: background-color 0.2s ease, z-index 0.1s ease;
-            position: relative;
-            /* 赋予初始层级，防错 */
-            z-index: 1; 
+            background-color: #fff;
         }
         .batch-block:last-child { 
             border-bottom: none; 
-        }
-        
-        /* 关键修复：当选色气泡处于激活显示状态时，强制拉高这一批次行的层级 */
-        .batch-block.popover-active {
-            z-index: 50 !important;
         }
 
         .batch-header {
@@ -183,10 +152,11 @@
             justify-content: space-between;
             align-items: center;
             padding: 14px 20px;
+            background-color: #fff;
             user-select: none;
         }
         .batch-header:hover { 
-            background-color: rgba(0, 0, 0, 0.015); 
+            background-color: #fbfbfd; 
         }
         
         .batch-title-clickarea {
@@ -198,112 +168,45 @@
             padding-right: 20px;
         }
         
-        /* 颜色标签圆点 */
-        .color-picker-trigger {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            border: 1px solid rgba(0,0,0,0.15);
-            margin-right: 12px;
-            cursor: pointer;
-            display: inline-block;
-            position: relative;
-            flex-shrink: 0;
-            box-sizing: border-box;
-            transition: transform 0.1s ease;
-        }
-        .color-picker-trigger:hover {
-            transform: scale(1.2);
-        }
-
-        /* 颜色弹出选择面板 */
-        .color-palette-popover {
-            position: absolute;
-            top: 24px;
-            left: 0;
-            background: #ffffff;
-            border: 1px solid #e5e5e5;
-            border-radius: 8px;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-            padding: 8px;
-            display: none;
-            gap: 6px;
-            grid-template-columns: repeat(4, 1fr);
-            z-index: 999;
-        }
-        .color-palette-popover.show {
-            display: grid;
-        }
-        .color-cell {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            cursor: pointer;
-            border: 1px solid rgba(0,0,0,0.1);
-            box-sizing: border-box;
-        }
-        .color-cell:hover {
-            transform: scale(1.1);
-        }
-
         .batch-title-container {
             display: flex;
             align-items: center;
             gap: 8px;
             flex: 1;
-            position: relative;
         }
 
         .batch-title { 
             font-weight: 500; 
             font-size: 14px; 
-            color: var(--text-primary); 
-            border-bottom: 1px dashed transparent;
-            padding: 2px 0;
-            max-width: 320px;
+            color: #1d1d1f; 
+            max-width: 360px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
-        
-        /* 悬停编辑提示 */
-        .batch-title-container:hover .batch-title {
-            color: var(--accent-blue);
-            border-bottom-color: var(--accent-blue);
-        }
-        .edit-tip {
-            font-size: 11px;
-            color: var(--text-secondary);
-            background: #eee;
-            padding: 1px 5px;
-            border-radius: 3px;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.1s ease;
-            white-space: nowrap;
-        }
-        .batch-title-container:hover .edit-tip {
-            opacity: 1;
+        .batch-title.custom-green { 
+            color: #1d1d1f;
+            font-weight: 600;
         }
 
-        /* 备注编辑状态输入框 */
+        /* 备注编辑状态输入框样式 */
         .batch-title-input {
-            font-size: 14px;
+            font-size: 13px;
             font-family: inherit;
             font-weight: 500;
-            padding: 2px 6px;
-            border: 1px solid var(--accent-blue);
+            padding: 4px 8px;
+            border: 1px solid #007aff;
             border-radius: 4px;
             outline: none;
-            width: 80%;
+            width: 90%;
             box-sizing: border-box;
-            color: var(--text-primary);
+            color: #1d1d1f;
             background: #fff;
         }
 
         .batch-info { 
             font-size: 13px; 
-            color: var(--text-secondary); 
+            color: #86868b; 
             display: flex; 
             align-items: center; 
             gap: 8px; 
@@ -312,7 +215,7 @@
         .fold-icon {
             font-size: 10px;
             color: #c7c7cc;
-            transition: transform 0.1s ease;
+            transition: transform 0.15s ease;
         }
         
         .batch-actions {
@@ -322,7 +225,7 @@
             flex-shrink: 0;
         }
 
-        .btn-batch-copy, .btn-batch-delete {
+        .btn-batch-copy, .btn-batch-edit {
             background: none;
             padding: 5px 12px;
             font-size: 12px;
@@ -330,30 +233,41 @@
             cursor: pointer;
             font-weight: 500;
             white-space: nowrap;
-            transition: all 0.1s ease;
+            transition: all 0.15s ease;
         }
 
         .btn-batch-copy {
-            color: var(--accent-blue);
-            border: 1px solid var(--accent-blue);
+            color: #007aff;
+            border: 1px solid #007aff;
         }
         .btn-batch-copy:hover {
-            background-color: var(--accent-blue);
+            background-color: #007aff;
             color: white;
         }
 
-        .btn-batch-delete {
-            color: var(--text-secondary);
+        /* 编辑/保存按钮基础样式 */
+        .btn-batch-edit {
+            color: #86868b;
             border: 1px solid #d2d2d7;
         }
-        .btn-batch-delete:hover {
-            color: white;
-            border-color: var(--accent-red);
-            background-color: var(--accent-red);
+        .btn-batch-edit:hover {
+            color: #1d1d1f;
+            border-color: #86868b;
+        }
+        /* 处于编辑状态中，变为绿色的保存按钮 */
+        .btn-batch-edit.saving-mode {
+            color: #fff !important;
+            background-color: #34c759 !important;
+            border-color: #34c759 !important;
+        }
+        .btn-batch-edit.saving-mode:hover {
+            background-color: #28a745 !important;
+            border-color: #28a745 !important;
         }
 
         .batch-body { 
             padding: 0 20px 15px 20px; 
+            background-color: #fff; 
             max-height: 320px; 
             overflow-y: auto; 
         }
@@ -364,20 +278,18 @@
         .result-item {
             display: table;
             width: 100%;
-            background: rgba(255, 255, 255, 0.7);
+            background: #fbfbfd;
             padding: 10px 14px;
             margin-bottom: 6px;
             border-radius: 4px;
             box-sizing: border-box;
-            border: 1px solid rgba(0,0,0,0.03);
         }
         .result-item:last-child { margin-bottom: 0; }
-        
         .index-num { 
             display: table-cell; 
             vertical-align: middle; 
             width: 25px; 
-            color: var(--text-secondary); 
+            color: #86868b; 
             font-size: 13px; 
         }
         .link-text-wrapper { 
@@ -387,17 +299,17 @@
             padding-right: 15px; 
         }
         .link-text a { 
-            color: var(--text-primary); 
+            color: #1d1d1f; 
             text-decoration: none; 
             font-size: 13px; 
         }
         .link-text a:hover {
-            color: var(--accent-blue);
+            color: #007aff;
         }
         .group-tag { 
             display: block; 
             font-size: 11px; 
-            color: var(--text-secondary); 
+            color: #86868b; 
             margin-top: 3px; 
             font-style: normal; 
         }
@@ -411,71 +323,92 @@
         .btn-inner-copy button {
             padding: 4px 10px; 
             font-size: 12px; 
-            background: #fff; 
-            color: var(--text-secondary); 
+            background: none; 
+            color: #86868b; 
             border: 1px solid #d2d2d7; 
             border-radius: 4px;
             cursor: pointer;
             transition: all 0.1s ease;
         }
         .btn-inner-copy button:hover { 
-            border-color: var(--text-secondary);
-            color: var(--text-primary);
+            border-color: #86868b;
+            color: #1d1d1f;
         }
         .btn-inner-copy button.copied { 
             background-color: #e8f5e9 !important; 
-            color: var(--accent-green) !important; 
-            border-color: var(--accent-green) !important; 
+            color: #34c759 !important; 
+            border-color: #34c759 !important; 
         }
 
         .toast-message {
-            position: fixed; top: 30px; left: 50%; transform: translateX(-50%) translateY(-10px);
-            background-color: var(--text-primary); color: #fff; padding: 10px 20px; border-radius: 6px;
-            font-size: 14px; z-index: 9999; opacity: 0; transition: opacity 0.1s ease, transform 0.1s ease; pointer-events: none;
+            position: fixed; 
+            top: 30px; 
+            left: 50%; 
+            transform: translateX(-50%) translateY(-10px);
+            background-color: #1d1d1f; 
+            color: #fff; 
+            padding: 10px 20px; 
+            border-radius: 6px;
+            font-size: 14px; 
+            z-index: 9999; 
+            opacity: 0; 
+            transition: opacity 0.15s ease, transform 0.15s ease; 
+            pointer-events: none;
         }
-        .toast-message.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .toast-message.show { 
+            transform: translateX(-50%) translateY(0); 
+            opacity: 1; 
+        }
 
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.2); display: flex; justify-content: center; align-items: center;
-            z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.1s ease;
+            z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.15s ease;
         }
         .modal-overlay.show { opacity: 1; visibility: visible; }
         .modal-content {
-            background: var(--bg-surface); width: 90%; max-width: 400px; padding: 30px;
-            border-radius: 8px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); transform: scale(0.95); transition: transform 0.1s ease;
+            background: #fff; width: 90%; max-width: 400px; padding: 30px;
+            border-radius: 8px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); transform: scale(0.95); transition: transform 0.15s ease;
         }
         .modal-overlay.show .modal-content { transform: scale(1); }
-        .modal-content h3 { margin-top: 0; color: var(--text-primary); font-size: 16px; font-weight: 600; margin-bottom: 20px; }
-        
-        .modal-color-section { margin-bottom: 20px; }
-        .modal-color-label { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; display: block; }
-        .modal-color-list { display: flex; gap: 10px; }
-        .modal-color-cell {
-            width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; box-sizing: border-box; transition: transform 0.1s ease;
-        }
-        .modal-color-cell:hover { transform: scale(1.1); }
-        .modal-color-cell.active { border-color: var(--text-primary); transform: scale(1.1); }
-
+        .modal-content h3 { margin-top: 0; color: #1d1d1f; font-size: 16px; font-weight: 600; margin-bottom: 20px; }
         .modal-content input {
-            width: 100%; padding: 12px; box-sizing: border-box; border: 1px solid var(--border-color);
+            width: 100%; padding: 12px; box-sizing: border-box; border: 1px solid #e5e5e5;
             border-radius: 6px; font-size: 14px; outline: none; margin-bottom: 20px;
-            background-color: #fafafa; color: var(--text-primary);
+            background-color: #fafafa;
         }
-        .modal-content input:focus { border-color: var(--accent-green); background-color: var(--bg-surface); }
+        .modal-content input:focus { border-color: #34c759; background-color: #fff; }
         
         .smart-extract-box {
-            background-color: #f5f5f7; padding: 12px; border-radius: 6px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+            background-color: #f5f5f7;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
         }
-        .extract-left { font-size: 13px; color: var(--text-primary); line-height: 1.4; }
-        .btn-use-extract { background: none; color: var(--accent-blue); font-size: 13px; cursor: pointer; border: none; padding: 0; }
+        .extract-left {
+            font-size: 13px;
+            color: #1d1d1f;
+            line-height: 1.4;
+        }
+        .btn-use-extract {
+            background: none;
+            color: #007aff;
+            font-size: 13px;
+            cursor: pointer;
+            border: none;
+            padding: 0;
+        }
 
         .modal-btns { display: flex; justify-content: flex-end; gap: 12px; }
         .modal-btns button { padding: 10px 16px; font-size: 14px; border-radius: 6px; border: none; cursor: pointer; }
-        .btn-cancel { background: #f5f5f7; color: var(--text-secondary); }
-        .btn-cancel:hover { background: #e8e8ed; color: var(--text-primary); }
-        .btn-confirm { background: var(--accent-green); color: #fff; }
-        .btn-confirm:hover { background: var(--accent-green-hover); }
+        .btn-cancel { background: #f5f5f7; color: #86868b; }
+        .btn-cancel:hover { background: #e8e8ed; color: #1d1d1f; }
+        .btn-confirm { background: #34c759; color: #fff; }
+        .btn-confirm:hover { background: #28a745; }
     </style>
 </head>
 <body>
@@ -494,12 +427,6 @@
         </div>
 
         <input type="text" id="modalRemarkInput" placeholder="输入备注（不填则默认为 test）">
-        
-        <div class="modal-color-section">
-            <span class="modal-color-label">选择批次标签颜色：</span>
-            <div id="modalColorList" class="modal-color-list"></div>
-        </div>
-
         <div class="modal-btns">
             <button class="btn-cancel" onclick="closeModal()">取消</button>
             <button class="btn-cancel" style="background:none;" onclick="submitBatch('')">跳过</button>
@@ -527,7 +454,7 @@
 
     <div>
         <div class="section-header" style="margin-bottom: 12px;">
-            <label style="font-weight: 500; font-size: 14px; color: var(--text-primary);">转换结果</label>
+            <label style="font-weight: 500; font-size: 14px; color: #1d1d1f;">转换结果</label>
             <div class="controls-right">
                 <div id="sortBtn" class="sort-control" onclick="toggleSortOrder()">最新在上</div>
                 <div class="clear-control" onclick="clearAllData()">清空缓存</div>
@@ -546,35 +473,16 @@
     const COUNTER_KEY = "PDD_LINK_GENERATOR_COUNTER";
     const INPUT_STATE_KEY = "PDD_INPUT_SECTION_COLLAPSED"; 
 
-    const PRESET_COLORS = [
-        { name: 'none', primary: '#ffffff', bg: '#ffffff' },
-        { name: 'red', primary: '#ffb3b3', bg: '#fff2f2' },
-        { name: 'orange', primary: '#ffd1b3', bg: '#fff8f2' },
-        { name: 'yellow', primary: '#ffe699', bg: '#fffdf2' },
-        { name: 'green', primary: '#b3e6b3', bg: '#f2fbf2' },
-        { name: 'cyan', primary: '#b3f0f0', bg: '#f2fcfc' },
-        { name: 'blue', primary: '#b3d1ff', bg: '#f2f7ff' },
-        { name: 'purple', primary: '#e6b3ff', bg: '#fbf2ff' }
-    ];
-
     let batches = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
     let batchCounter = parseInt(localStorage.getItem(COUNTER_KEY)) || 1;
     let isDescending = true; 
     let tempParsedItems = []; 
     let autoExtractedRemark = ""; 
-    let selectedModalColorName = 'none';
 
     window.onload = function() {
         renderBatches();
         let shouldCollapse = localStorage.getItem(INPUT_STATE_KEY) === "true";
         applyInputSectionState(shouldCollapse);
-        initModalColors();
-
-        // 全局点击清空状态
-        document.addEventListener('click', function() {
-            document.querySelectorAll('.color-palette-popover').forEach(p => p.classList.remove('show'));
-            document.querySelectorAll('.batch-block').forEach(b => b.classList.remove('popover-active'));
-        });
     };
 
     function saveDataToStorage() {
@@ -585,7 +493,7 @@
     function showToast(message, isError = false) {
         const toast = document.getElementById('toast');
         toast.innerText = message;
-        toast.style.borderLeft = isError ? '3px solid var(--accent-red)' : '3px solid var(--accent-green)';
+        toast.style.borderLeft = isError ? '3px solid #ff3b30' : '3px solid #34c759';
         toast.classList.add('show');
         setTimeout(() => toast.classList.remove('show'), 1200);
     }
@@ -606,25 +514,6 @@
     function toggleInputSectionManual() {
         const section = document.getElementById('inputSection');
         applyInputSectionState(!section.classList.contains('collapsed'));
-    }
-
-    function initModalColors() {
-        const container = document.getElementById('modalColorList');
-        container.innerHTML = '';
-        PRESET_COLORS.forEach(color => {
-            const cell = document.createElement('div');
-            cell.className = `modal-color-cell ${color.name === selectedModalColorName ? 'active' : ''}`;
-            cell.style.backgroundColor = color.primary;
-            if(color.name === 'none') {
-                cell.style.border = '1px solid rgba(0,0,0,0.15)';
-            }
-            cell.onclick = function() {
-                document.querySelectorAll('.modal-color-cell').forEach(c => c.classList.remove('active'));
-                cell.classList.add('active');
-                selectedModalColorName = color.name;
-            };
-            container.appendChild(cell);
-        });
     }
 
     function handleGenerateClick() {
@@ -676,9 +565,6 @@
             extractBox.style.display = 'none';
         }
 
-        selectedModalColorName = 'none';
-        initModalColors();
-
         document.getElementById('remarkModal').classList.add('show');
         document.getElementById('modalRemarkInput').focus();
     }
@@ -699,11 +585,10 @@
         
         const newBatch = {
             batchId: batchCounter++,
-            remark: finalTitle, 
+            remark: finalTitle,
             items: tempParsedItems,
             timestamp: Date.now(),
-            isCollapsed: true,
-            colorName: selectedModalColorName
+            isCollapsed: true 
         };
         
         batches.push(newBatch); 
@@ -723,6 +608,11 @@
     }
 
     function toggleBatchBody(headerClickAreaElement, batchId) {
+        // 如果当前这行正在处于“编辑备注模式”，点击整行时不触发折叠
+        if (headerClickAreaElement.querySelector('.batch-title-input')) {
+            return;
+        }
+
         const bodyElement = headerClickAreaElement.parentElement.nextElementSibling;
         const iconElement = headerClickAreaElement.querySelector('.fold-icon');
         const targetBatch = batches.find(b => b.batchId === batchId);
@@ -739,55 +629,49 @@
         saveDataToStorage(); 
     }
 
-    // 打开局部修改颜色面板 (加入了层级拉高的修复核心逻辑)
-    function openInlineColorPicker(event, batchId) {
-        event.stopPropagation(); 
+    // 处理编辑与保存的核心逻辑切换
+    function handleEditClick(event, batchId) {
+        event.stopPropagation(); // 阻止点击冒泡，彻底防止触发展开/折叠
         
-        // 先移除所有行的激活标记并隐藏气泡
-        document.querySelectorAll('.color-palette-popover').forEach(p => p.classList.remove('show'));
-        document.querySelectorAll('.batch-block').forEach(b => b.classList.remove('popover-active'));
+        const btn = event.currentTarget;
+        const header = btn.closest('.batch-header');
+        const titleContainer = header.querySelector('.batch-title-container');
+        const titleEl = titleContainer.querySelector('.batch-title');
         
-        const popover = event.currentTarget.querySelector('.color-palette-popover');
-        if (popover) {
-            popover.classList.add('show');
-            // 顺着触控点，找到最外层所属的 .batch-block，加上高 z-index 状态
-            const block = event.currentTarget.closest('.batch-block');
-            if (block) {
-                block.classList.add('popover-active');
-            }
+        // 如果当前是“编辑”状态（即存在输入框），此时点击意味着“保存”
+        const existingInput = titleContainer.querySelector('.batch-title-input');
+        if (existingInput) {
+            existingInput.blur(); // 直接触发 blur 事件去处理保存逻辑即可
+            return;
         }
-    }
 
-    function changeBatchColor(event, batchId, colorName) {
-        event.stopPropagation();
-        const targetBatch = batches.find(b => b.batchId === batchId);
-        if (targetBatch) {
-            targetBatch.colorName = colorName;
-            saveDataToStorage();
-            renderBatches(); 
-        }
-    }
-
-    function startEditRemark(event, batchId) {
-        event.stopPropagation();
-        const container = event.currentTarget;
-        const titleEl = container.querySelector('.batch-title');
+        // 进入编辑状态
         const currentText = titleEl.innerText;
-        
         titleEl.style.display = 'none';
-        const tipEl = container.querySelector('.edit-tip');
-        if (tipEl) tipEl.style.display = 'none';
 
         const input = document.createElement('input');
         input.type = 'text';
         input.className = 'batch-title-input';
+        // 如果是初始化的默认值 test，点编辑时置空方便用户直接输入
         input.value = currentText === 'test' ? '' : currentText;
         input.placeholder = '输入备注（不填则默认为 test）';
         
-        container.appendChild(input);
+        titleContainer.appendChild(input);
         input.focus();
         input.select();
 
+        // 按钮变为绿色保存样式
+        btn.innerText = '保存';
+        btn.classList.add('saving-mode');
+
+        // 输入框按下回车的处理
+        input.onkeydown = function(e) {
+            if (e.key === 'Enter') {
+                input.blur();
+            }
+        };
+
+        // 失去焦点时的保存逻辑
         input.onblur = function() {
             const newText = input.value.trim() !== '' ? input.value.trim() : 'test';
             const targetBatch = batches.find(b => b.batchId === batchId);
@@ -795,18 +679,14 @@
                 targetBatch.remark = newText;
                 saveDataToStorage();
             }
+            // 重新渲染，恢复正常视图状态
             renderBatches();
-        };
-
-        input.onkeydown = function(e) {
-            if (e.key === 'Enter') {
-                input.blur();
-            }
         };
     }
 
     function copySingleBatchLinks(event, batchId) {
         event.stopPropagation(); 
+        
         const targetBatch = batches.find(b => b.batchId === batchId);
         if (!targetBatch || targetBatch.items.length === 0) return;
 
@@ -825,16 +705,6 @@
         });
     }
 
-    function deleteSingleBatch(event, batchId) {
-        event.stopPropagation();
-        if (!confirm(`确定要删除该批次数据吗？`)) return;
-
-        batches = batches.filter(b => b.batchId !== batchId);
-        saveDataToStorage();
-        renderBatches();
-        showToast('批次已删除');
-    }
-
     function renderBatches() {
         const container = document.getElementById('resultContainer');
         if (batches.length === 0) {
@@ -850,28 +720,15 @@
             const batchDiv = document.createElement('div');
             batchDiv.className = 'batch-block';
 
-            const colorConfig = PRESET_COLORS.find(c => c.name === (batch.colorName || 'none')) || PRESET_COLORS[0];
-            batchDiv.style.backgroundColor = colorConfig.bg;
-
             const titleText = batch.remark; 
             const collapsedClass = batch.isCollapsed ? 'collapsed' : '';
             const iconStyle = batch.isCollapsed ? '' : 'style="transform: rotate(90deg);"';
 
-            let popoverHtml = `<div class="color-palette-popover">`;
-            PRESET_COLORS.forEach(c => {
-                popoverHtml += `<div class="color-cell" style="background-color: ${c.primary};" onclick="changeBatchColor(event, ${batch.batchId}, '${c.name}')"></div>`;
-            });
-            popoverHtml += `</div>`;
-
             batchDiv.innerHTML = `
                 <div class="batch-header">
-                    <div class="color-picker-trigger" style="background-color: ${colorConfig.primary};" onclick="openInlineColorPicker(event, ${batch.batchId})">
-                        ${popoverHtml}
-                    </div>
                     <div class="batch-title-clickarea" onclick="toggleBatchBody(this, ${batch.batchId})">
-                        <div class="batch-title-container" ondblclick="startEditRemark(event, ${batch.batchId})">
+                        <div class="batch-title-container">
                             <div class="batch-title" title="${titleText}">${titleText}</div>
-                            <span class="edit-tip">双击编辑</span>
                         </div>
                         <div class="batch-info">
                             <span>${batch.items.length} 条链接</span>
@@ -879,8 +736,8 @@
                         </div>
                     </div>
                     <div class="batch-actions">
+                        <button class="btn-batch-edit" onclick="handleEditClick(event, ${batch.batchId})">编辑</button>
                         <button class="btn-batch-copy" onclick="copySingleBatchLinks(event, ${batch.batchId})">复制此批次</button>
-                        <button class="btn-batch-delete" onclick="deleteSingleBatch(event, ${batch.batchId})">删除</button>
                     </div>
                 </div>
                 <div class="batch-body ${collapsedClass}"></div>
