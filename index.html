@@ -164,6 +164,8 @@
         .batch-block {
             border-bottom: 1px solid #eee;
             background-color: var(--bg-surface);
+            transition: background-color 0.2s ease;
+            position: relative;
         }
         .batch-block:last-child { 
             border-bottom: none; 
@@ -174,11 +176,10 @@
             justify-content: space-between;
             align-items: center;
             padding: 14px 20px;
-            background-color: var(--bg-surface);
             user-select: none;
         }
         .batch-header:hover { 
-            background-color: var(--bg-element); 
+            background-color: rgba(0, 0, 0, 0.015); 
         }
         
         .batch-title-clickarea {
@@ -189,21 +190,117 @@
             cursor: pointer;
             padding-right: 20px;
         }
+        
+        /* 颜色标签圆点 */
+        .color-picker-trigger {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 1px solid rgba(0,0,0,0.15);
+            margin-right: 12px;
+            cursor: pointer;
+            display: inline-block;
+            position: relative;
+            flex-shrink: 0;
+            box-sizing: border-box;
+            transition: transform 0.1s ease;
+        }
+        .color-picker-trigger:hover {
+            transform: scale(1.2);
+        }
+
+        /* 颜色弹出选择面板 */
+        .color-palette-popover {
+            position: absolute;
+            top: 24px;
+            left: 0;
+            background: #ffffff;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: 8px;
+            display: none;
+            gap: 6px;
+            grid-template-columns: repeat(4, 1fr);
+            z-index: 100;
+        }
+        .color-palette-popover.show {
+            display: grid;
+        }
+        .color-cell {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 1px solid rgba(0,0,0,0.1);
+            box-sizing: border-box;
+        }
+        .color-cell:hover {
+            transform: scale(1.1);
+        }
+
+        .batch-title-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            position: relative;
+        }
+
         .batch-title { 
             font-weight: 500; 
             font-size: 14px; 
             color: var(--text-primary); 
+            border-bottom: 1px dashed transparent;
+            padding: 2px 0;
+            max-width: 320px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
-        .batch-title.custom-title { 
-            font-weight: 600;
-            color: #111;
+        
+        /* 悬停编辑提示 */
+        .batch-title-container:hover .batch-title {
+            color: var(--accent-blue);
+            border-bottom-color: var(--accent-blue);
         }
+        .edit-tip {
+            font-size: 11px;
+            color: var(--text-secondary);
+            background: #eee;
+            padding: 1px 5px;
+            border-radius: 3px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.1s ease;
+            white-space: nowrap;
+        }
+        .batch-title-container:hover .edit-tip {
+            opacity: 1;
+        }
+
+        /* 备注编辑状态输入框 */
+        .batch-title-input {
+            font-size: 14px;
+            font-family: inherit;
+            font-weight: 500;
+            padding: 2px 6px;
+            border: 1px solid var(--accent-blue);
+            border-radius: 4px;
+            outline: none;
+            width: 80%;
+            box-sizing: border-box;
+            color: var(--text-primary);
+            background: #fff;
+        }
+
         .batch-info { 
             font-size: 13px; 
             color: var(--text-secondary); 
             display: flex; 
             align-items: center; 
             gap: 8px; 
+            flex-shrink: 0;
         }
         .fold-icon {
             font-size: 10px;
@@ -215,6 +312,7 @@
             display: flex;
             gap: 8px;
             align-items: center;
+            flex-shrink: 0;
         }
 
         .btn-batch-copy, .btn-batch-delete {
@@ -249,7 +347,6 @@
 
         .batch-body { 
             padding: 0 20px 15px 20px; 
-            background-color: var(--bg-surface); 
             max-height: 320px; 
             overflow-y: auto; 
         }
@@ -260,11 +357,12 @@
         .result-item {
             display: table;
             width: 100%;
-            background: var(--bg-element);
+            background: rgba(255, 255, 255, 0.7);
             padding: 10px 14px;
             margin-bottom: 6px;
             border-radius: 4px;
             box-sizing: border-box;
+            border: 1px solid rgba(0,0,0,0.03);
         }
         .result-item:last-child { margin-bottom: 0; }
         
@@ -306,7 +404,7 @@
         .btn-inner-copy button {
             padding: 4px 10px; 
             font-size: 12px; 
-            background: none; 
+            background: #fff; 
             color: var(--text-secondary); 
             border: 1px solid #d2d2d7; 
             border-radius: 4px;
@@ -355,6 +453,38 @@
         }
         .modal-overlay.show .modal-content { transform: scale(1); }
         .modal-content h3 { margin-top: 0; color: var(--text-primary); font-size: 16px; font-weight: 600; margin-bottom: 20px; }
+        
+        /* 弹窗中的颜色选择面板 */
+        .modal-color-section {
+            margin-bottom: 20px;
+        }
+        .modal-color-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            display: block;
+        }
+        .modal-color-list {
+            display: flex;
+            gap: 10px;
+        }
+        .modal-color-cell {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            box-sizing: border-box;
+            transition: transform 0.1s ease;
+        }
+        .modal-color-cell:hover {
+            transform: scale(1.1);
+        }
+        .modal-color-cell.active {
+            border-color: var(--text-primary);
+            transform: scale(1.1);
+        }
+
         .modal-content input {
             width: 100%; padding: 12px; box-sizing: border-box; border: 1px solid var(--border-color);
             border-radius: 6px; font-size: 14px; outline: none; margin-bottom: 20px;
@@ -410,6 +540,12 @@
         </div>
 
         <input type="text" id="modalRemarkInput" placeholder="输入备注（不填则默认为 test）">
+        
+        <div class="modal-color-section">
+            <span class="modal-color-label">选择批次标签颜色：</span>
+            <div id="modalColorList" class="modal-color-list"></div>
+        </div>
+
         <div class="modal-btns">
             <button class="btn-cancel" onclick="closeModal()">取消</button>
             <button class="btn-cancel" style="background:none;" onclick="submitBatch('')">跳过</button>
@@ -456,16 +592,35 @@
     const COUNTER_KEY = "PDD_LINK_GENERATOR_COUNTER";
     const INPUT_STATE_KEY = "PDD_INPUT_SECTION_COLLAPSED"; 
 
+    // 八种高级精选浅色（莫兰迪/马卡龙色系）
+    const PRESET_COLORS = [
+        { name: 'none', primary: '#ffffff', bg: '#ffffff' },        // 无/白色
+        { name: 'red', primary: '#ffb3b3', bg: '#fff2f2' },         // 浅红
+        { name: 'orange', primary: '#ffd1b3', bg: '#fff8f2' },      // 浅橙
+        { name: 'yellow', primary: '#ffe699', bg: '#fffdf2' },      // 浅黄
+        { name: 'green', primary: '#b3e6b3', bg: '#f2fbf2' },       // 浅绿
+        { name: 'cyan', primary: '#b3f0f0', bg: '#f2fcfc' },        // 浅青
+        { name: 'blue', primary: '#b3d1ff', bg: '#f2f7ff' },        // 浅蓝
+        { name: 'purple', primary: '#e6b3ff', bg: '#fbf2ff' }       // 浅紫
+    ];
+
     let batches = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
     let batchCounter = parseInt(localStorage.getItem(COUNTER_KEY)) || 1;
     let isDescending = true; 
     let tempParsedItems = []; 
     let autoExtractedRemark = ""; 
+    let selectedModalColorName = 'none'; // 弹窗中默认选中的颜色名
 
     window.onload = function() {
         renderBatches();
         let shouldCollapse = localStorage.getItem(INPUT_STATE_KEY) === "true";
         applyInputSectionState(shouldCollapse);
+        initModalColors();
+
+        // 点击页面其他空白处关闭颜色弹窗
+        document.addEventListener('click', function() {
+            document.querySelectorAll('.color-palette-popover').forEach(p => p.classList.remove('show'));
+        });
     };
 
     function saveDataToStorage() {
@@ -497,6 +652,26 @@
     function toggleInputSectionManual() {
         const section = document.getElementById('inputSection');
         applyInputSectionState(!section.classList.contains('collapsed'));
+    }
+
+    // 初始化弹窗中的颜色选择按钮
+    function initModalColors() {
+        const container = document.getElementById('modalColorList');
+        container.innerHTML = '';
+        PRESET_COLORS.forEach(color => {
+            const cell = document.createElement('div');
+            cell.className = `modal-color-cell ${color.name === selectedModalColorName ? 'active' : ''}`;
+            cell.style.backgroundColor = color.primary;
+            if(color.name === 'none') {
+                cell.style.border = '1px solid rgba(0,0,0,0.15)';
+            }
+            cell.onclick = function() {
+                document.querySelectorAll('.modal-color-cell').forEach(c => c.classList.remove('active'));
+                cell.classList.add('active');
+                selectedModalColorName = color.name;
+            };
+            container.appendChild(cell);
+        });
     }
 
     function handleGenerateClick() {
@@ -548,6 +723,10 @@
             extractBox.style.display = 'none';
         }
 
+        // 重置弹窗颜色为默认“无色”
+        selectedModalColorName = 'none';
+        initModalColors();
+
         document.getElementById('remarkModal').classList.add('show');
         document.getElementById('modalRemarkInput').focus();
     }
@@ -565,7 +744,6 @@
     function submitBatch(remarkText) {
         closeModal();
         
-        // 如果填了内容就直接用内容，否则使用默认值 "test"
         const finalTitle = remarkText.trim() !== '' ? remarkText.trim() : 'test';
         
         const newBatch = {
@@ -573,7 +751,8 @@
             remark: finalTitle, 
             items: tempParsedItems,
             timestamp: Date.now(),
-            isCollapsed: true 
+            isCollapsed: true,
+            colorName: selectedModalColorName // 保存选择的颜色代号
         };
         
         batches.push(newBatch); 
@@ -607,6 +786,72 @@
             if (targetBatch) targetBatch.isCollapsed = true;  
         }
         saveDataToStorage(); 
+    }
+
+    // 打开局部修改颜色面板
+    function openInlineColorPicker(event, batchId) {
+        event.stopPropagation(); // 阻断折叠面板触发
+        
+        // 先关闭其它打开的面板
+        document.querySelectorAll('.color-palette-popover').forEach(p => p.classList.remove('show'));
+        
+        const popover = event.target.querySelector('.color-palette-popover');
+        if (popover) {
+            popover.classList.add('show');
+        }
+    }
+
+    // 修改特定批次的颜色
+    function changeBatchColor(event, batchId, colorName) {
+        event.stopPropagation();
+        const targetBatch = batches.find(b => b.batchId === batchId);
+        if (targetBatch) {
+            targetBatch.colorName = colorName;
+            saveDataToStorage();
+            renderBatches(); // 重新渲染刷新颜色
+        }
+    }
+
+    // 开启双击编辑备注状态
+    function startEditRemark(event, batchId) {
+        event.stopPropagation();
+        const container = event.currentTarget;
+        const titleEl = container.querySelector('.batch-title');
+        const currentText = titleEl.innerText;
+        
+        // 隐藏原文字和提示
+        titleEl.style.display = 'none';
+        const tipEl = container.querySelector('.edit-tip');
+        if (tipEl) tipEl.style.display = 'none';
+
+        // 创建临时输入框
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'batch-title-input';
+        input.value = currentText === 'test' ? '' : currentText;
+        input.placeholder = '输入备注（不填则默认为 test）';
+        
+        container.appendChild(input);
+        input.focus();
+        input.select();
+
+        // 绑定失去焦点（点击空白处）自动保存事件
+        input.onblur = function() {
+            const newText = input.value.trim() !== '' ? input.value.trim() : 'test';
+            const targetBatch = batches.find(b => b.batchId === batchId);
+            if (targetBatch) {
+                targetBatch.remark = newText;
+                saveDataToStorage();
+            }
+            renderBatches();
+        };
+
+        // 支持回车保存
+        input.onkeydown = function(e) {
+            if (e.key === 'Enter') {
+                input.blur();
+            }
+        };
     }
 
     function copySingleBatchLinks(event, batchId) {
@@ -655,14 +900,31 @@
             const batchDiv = document.createElement('div');
             batchDiv.className = 'batch-block';
 
-            const titleText = batch.remark; // 标题直接使用备注或默认的 test
+            // 根据配置的颜色代号匹配整行背景及圆点色
+            const colorConfig = PRESET_COLORS.find(c => c.name === (batch.colorName || 'none')) || PRESET_COLORS[0];
+            batchDiv.style.backgroundColor = colorConfig.bg;
+
+            const titleText = batch.remark; 
             const collapsedClass = batch.isCollapsed ? 'collapsed' : '';
             const iconStyle = batch.isCollapsed ? '' : 'style="transform: rotate(90deg);"';
 
+            // 构建弹出的调色盘 HTML
+            let popoverHtml = `<div class="color-palette-popover">`;
+            PRESET_COLORS.forEach(c => {
+                popoverHtml += `<div class="color-cell" style="background-color: ${c.primary};" onclick="changeBatchColor(event, ${batch.batchId}, '${c.name}')"></div>`;
+            });
+            popoverHtml += `</div>`;
+
             batchDiv.innerHTML = `
                 <div class="batch-header">
+                    <div class="color-picker-trigger" style="background-color: ${colorConfig.primary};" onclick="openInlineColorPicker(event, ${batch.batchId})">
+                        ${popoverHtml}
+                    </div>
                     <div class="batch-title-clickarea" onclick="toggleBatchBody(this, ${batch.batchId})">
-                        <div class="batch-title custom-title">${titleText}</div>
+                        <div class="batch-title-container" ondblclick="startEditRemark(event, ${batch.batchId})">
+                            <div class="batch-title" title="${titleText}">${titleText}</div>
+                            <span class="edit-tip">双击编辑</span>
+                        </div>
                         <div class="batch-info">
                             <span>${batch.items.length} 条链接</span>
                             <span class="fold-icon" ${iconStyle}>▶</span>
