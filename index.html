@@ -198,19 +198,19 @@
             transform: scale(1.15);
         }
 
-        /* 颜色气泡弹窗 */
+        /* 颜色气泡弹窗 - 关键修复：改为向上弹出，彻底规避下方行遮挡 */
         .color-bubble-menu {
             position: absolute;
-            top: 24px;
+            bottom: 24px; /* 从下方弹出改为从圆点上方探出 */
             left: 0;
             background: #fff;
             border-radius: 6px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.15); /* 阴影改为朝上 */
             padding: 8px;
             display: none;
             grid-template-columns: repeat(4, 1fr);
             gap: 6px;
-            z-index: 100;
+            z-index: 99999; /* 赋予绝对霸权的最高层级 */
             border: 1px solid #e5e5e5;
         }
         .color-bubble-menu.show {
@@ -412,7 +412,7 @@
             padding: 10px 20px; 
             border-radius: 6px;
             font-size: 14px; 
-            z-index: 9999; 
+            z-index: 999999; 
             opacity: 0; 
             transition: opacity 0.15s ease, transform 0.15s ease; 
             pointer-events: none;
@@ -586,7 +586,7 @@
     let isDescending = true; 
     let tempParsedItems = []; 
     let autoExtractedRemark = ""; 
-    let tempSelectedColor = ""; // 记录弹窗选中的临时颜色
+    let tempSelectedColor = ""; 
 
     window.onload = function() {
         initModalColors();
@@ -632,7 +632,6 @@
         applyInputSectionState(!section.classList.contains('collapsed'));
     }
 
-    // 初始化弹窗的颜色选择控件
     function initModalColors() {
         const listContainer = document.getElementById('modalColorList');
         let html = `<div class="modal-color-opt selected" data-color="" style="background:#fff; border:1px solid #d2d2d7;" title="无颜色"></div>`;
@@ -691,7 +690,6 @@
 
         document.getElementById('modalRemarkInput').value = '';
         
-        // 重置弹窗颜色选择器状态
         tempSelectedColor = "";
         const opts = document.getElementById('modalColorList').querySelectorAll('.modal-color-opt');
         opts.forEach(o => o.classList.remove('selected'));
@@ -729,7 +727,7 @@
             items: tempParsedItems,
             timestamp: Date.now(),
             isCollapsed: true,
-            colorTag: chosenColor || "" // 固化颜色属性
+            colorTag: chosenColor || "" 
         };
         
         batches.push(newBatch); 
@@ -749,7 +747,6 @@
     }
 
     function toggleBatchBody(headerClickAreaElement, batchId) {
-        // 正在编辑备注时，拦截展开折叠
         if (headerClickAreaElement.querySelector('.batch-title-input')) {
             return;
         }
@@ -770,10 +767,8 @@
         saveDataToStorage(); 
     }
 
-    // 触发左侧颜色气泡展开
     function triggerColorPicker(event) {
-        event.stopPropagation(); // 拦截，不冒泡到行点击
-        // 先关闭其它打开的颜色菜单
+        event.stopPropagation(); 
         document.querySelectorAll('.color-bubble-menu.show').forEach(m => {
             if (m !== event.currentTarget.nextElementSibling) m.classList.remove('show');
         });
@@ -781,22 +776,19 @@
         menu.classList.toggle('show');
     }
 
-    // 选择或更改批次底色逻辑
     function selectBatchColor(event, batchId, colorKey) {
-        event.stopPropagation(); // 拦截，不让行产生折叠
+        event.stopPropagation(); 
         const targetBatch = batches.find(b => b.batchId === batchId);
         if (targetBatch) {
             targetBatch.colorTag = colorKey;
             saveDataToStorage();
         }
-        // 隐藏当前气泡框并重绘
         event.currentTarget.parentElement.classList.remove('show');
         renderBatches();
     }
 
-    // 编辑与保存备注逻辑
     function handleEditClick(event, batchId) {
-        event.stopPropagation(); // 严格拦截冒泡
+        event.stopPropagation(); 
         
         const btn = event.currentTarget;
         const container = btn.closest('.batch-title-container');
@@ -817,7 +809,6 @@
         input.value = currentText === 'test' ? '' : currentText;
         input.placeholder = '输入备注（不填默认为 test）';
         
-        // 把输入框插在标题原本的位置上
         container.insertBefore(input, btn);
         input.focus();
         input.select();
@@ -825,7 +816,7 @@
         btn.innerText = '保存';
         btn.classList.add('saving-mode');
 
-        input.onclick = function(e) { e.stopPropagation(); }; // 防止点击输入框折叠
+        input.onclick = function(e) { e.stopPropagation(); }; 
 
         input.onkeydown = function(e) {
             if (e.key === 'Enter') {
@@ -884,12 +875,10 @@
             const collapsedClass = batch.isCollapsed ? 'collapsed' : '';
             const iconStyle = batch.isCollapsed ? '' : 'style="transform: rotate(90deg);"';
             
-            // 匹配获取当前批次的底色和圆点底色
             const hasColor = batch.colorTag && COLOR_MAP[batch.colorTag];
             const headerBgStyle = hasColor ? `style="background-color: ${COLOR_MAP[batch.colorTag]};"` : '';
             const dotBgStyle = hasColor ? `style="background-color: ${COLOR_MAP[batch.colorTag]}; border-color: rgba(0,0,0,0.15);"` : '';
 
-            // 生成颜色气泡选择菜单项
             let bubbleOptsHtml = `<div class="color-opt opt-clear" onclick="selectBatchColor(event, ${batch.batchId}, '')" title="清除颜色"></div>`;
             for (let colorKey in COLOR_MAP) {
                 bubbleOptsHtml += `<div class="color-opt" style="background-color: ${COLOR_MAP[colorKey]};" onclick="selectBatchColor(event, ${batch.batchId}, '${colorKey}')"></div>`;
