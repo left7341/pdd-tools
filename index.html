@@ -175,14 +175,16 @@
             gap: 8px;
             flex: 1;
             padding-right: 15px;
+            position: relative; /* 为横向定位提供锚点 */
         }
 
-        /* 标签颜色选择器样式 */
+        /* 标签颜色选择器区域样式 */
         .color-picker-wrapper {
+            display: inline-flex;
+            align-items: center;
             position: relative;
-            display: inline-block;
-            margin-right: 4px;
             flex-shrink: 0;
+            z-index: 10;
         }
         .color-dot-trigger {
             width: 14px;
@@ -193,40 +195,43 @@
             cursor: pointer;
             transition: transform 0.15s ease;
             box-sizing: border-box;
+            flex-shrink: 0;
         }
         .color-dot-trigger:hover {
             transform: scale(1.15);
         }
 
-        /* 颜色气泡弹窗 - 关键修复：改为向上弹出，彻底规避下方行遮挡 */
+        /* 颜色气泡弹窗 - 彻底重构：改为向右平铺的长条横格，绝不溢出上下边界 */
         .color-bubble-menu {
             position: absolute;
-            bottom: 24px; /* 从下方弹出改为从圆点上方探出 */
-            left: 0;
+            left: 24px; /* 在圆点右侧滑出 */
+            top: 50%;
+            transform: translateY(-50%);
             background: #fff;
-            border-radius: 6px;
-            box-shadow: 0 -4px 15px rgba(0,0,0,0.15); /* 阴影改为朝上 */
-            padding: 8px;
+            border-radius: 20px; /* 圆角长条 */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+            padding: 4px 10px;
             display: none;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 6px;
-            z-index: 99999; /* 赋予绝对霸权的最高层级 */
+            align-items: center;
+            gap: 8px;
+            z-index: 99;
             border: 1px solid #e5e5e5;
         }
         .color-bubble-menu.show {
-            display: grid;
+            display: flex; /* 横向布局 */
         }
         .color-opt {
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
             cursor: pointer;
             box-sizing: border-box;
             border: 1px solid rgba(0,0,0,0.05);
             transition: transform 0.1s ease;
+            flex-shrink: 0;
         }
         .color-opt:hover {
-            transform: scale(1.15);
+            transform: scale(1.2);
         }
         .color-opt.opt-clear {
             background: #fff;
@@ -240,7 +245,7 @@
             height: 1px;
             background: #ff3b30;
             transform: rotate(45deg);
-            top: 9px;
+            top: 8px;
             left: 0;
         }
 
@@ -269,7 +274,7 @@
             background: #fff;
         }
 
-        /* 编辑/保存按钮样式 - 挪到标题右侧紧贴 */
+        /* 编辑/保存按钮样式 */
         .btn-batch-edit {
             background: none;
             padding: 2px 8px;
@@ -569,7 +574,6 @@
     const COUNTER_KEY = "PDD_LINK_GENERATOR_COUNTER";
     const INPUT_STATE_KEY = "PDD_INPUT_SECTION_COLLAPSED"; 
 
-    // 八种优雅的莫兰迪浅色系定义
     const COLOR_MAP = {
         'light-red': '#ffeef0',
         'light-orange': '#fff3e6',
@@ -594,7 +598,6 @@
         let shouldCollapse = localStorage.getItem(INPUT_STATE_KEY) === "true";
         applyInputSectionState(shouldCollapse);
 
-        // 全局点击关闭已经打开的颜色气泡
         document.addEventListener('click', function() {
             const openMenus = document.querySelectorAll('.color-bubble-menu.show');
             openMenus.forEach(menu => menu.classList.remove('show'));
