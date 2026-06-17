@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>商品 ID 链接自动拼接工具</title>
+    <title>test_tools</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -449,16 +449,19 @@
 
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.2); display: flex; justify-content: center; align-items: center;
-            z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.15s ease;
+            background: rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center;
+            z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.2s ease;
+            backdrop-filter: blur(2px);
         }
         .modal-overlay.show { opacity: 1; visibility: visible; }
         .modal-content {
             background: #fff; width: 90%; max-width: 400px; padding: 30px;
-            border-radius: 8px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); transform: scale(0.95); transition: transform 0.15s ease;
+            border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 20px 40px rgba(0,0,0,0.04); 
+            transform: scale(0.95); transition: transform 0.2s ease;
         }
         .modal-overlay.show .modal-content { transform: scale(1); }
-        .modal-content h3 { margin-top: 0; color: #1d1d1f; font-size: 16px; font-weight: 600; margin-bottom: 20px; }
+        .modal-content h3 { margin-top: 0; color: #1d1d1f; font-size: 16px; font-weight: 600; margin-bottom: 14px; }
+        .modal-content p { font-size: 14px; color: #86868b; line-height: 1.5; margin: 0 0 25px 0; }
         .modal-content input {
             width: 100%; padding: 12px; box-sizing: border-box; border: 1px solid #e5e5e5;
             border-radius: 6px; font-size: 14px; outline: none; margin-bottom: 20px;
@@ -518,16 +521,29 @@
         }
 
         .modal-btns { display: flex; justify-content: flex-end; gap: 12px; }
-        .modal-btns button { padding: 10px 16px; font-size: 14px; border-radius: 6px; border: none; cursor: pointer; }
-        .btn-cancel { background: #f5f5f7; color: #86868b; }
+        .modal-btns button { padding: 10px 18px; font-size: 14px; border-radius: 6px; border: none; cursor: pointer; font-weight: 500; }
+        .btn-cancel { background: #f5f5f7; color: #86868b; transition: all 0.15s; }
         .btn-cancel:hover { background: #e8e8ed; color: #1d1d1f; }
-        .btn-confirm { background: #34c759; color: #fff; }
+        .btn-confirm { background: #34c759; color: #fff; transition: all 0.15s; }
         .btn-confirm:hover { background: #28a745; }
+        .btn-danger-confirm { background: #ff3b30; color: #fff; transition: all 0.15s; }
+        .btn-danger-confirm:hover { background: #e0241b; }
     </style>
 </head>
 <body>
 
 <div id="toast" class="toast-message"></div>
+
+<div id="deleteConfirmModal" class="modal-overlay" onclick="closeDeleteModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h3 style="color: #ff3b30;">确认删除此批次？</h3>
+        <p>此操作将永久移除该批次内的所有商品链接记录，且不可恢复。</p>
+        <div class="modal-btns">
+            <button class="btn-cancel" onclick="closeDeleteModal()">取消</button>
+            <button class="btn-danger-confirm" id="modalDeleteBtn">确认删除</button>
+        </div>
+    </div>
+</div>
 
 <div id="remarkModal" class="modal-overlay">
     <div class="modal-content">
@@ -611,6 +627,7 @@
     let tempParsedItems = []; 
     let autoExtractedRemark = ""; 
     let tempSelectedColor = ""; 
+    let activeDeleteBatchId = null; // 用于记录当前正准备删除的批次
 
     window.onload = function() {
         initModalColors();
@@ -784,13 +801,32 @@
         showToast('复制状态已全部重置');
     }
 
-    function deleteSingleBatch(event, batchId) {
+    // 唤起美化后的删除弹窗
+    function openDeleteModal(event, batchId) {
         event.stopPropagation(); 
-        if (confirm('确认要删除这个批次吗？删除后不可恢复。')) {
-            batches = batches.filter(b => b.batchId !== batchId);
+        activeDeleteBatchId = batchId;
+        const modal = document.getElementById('deleteConfirmModal');
+        modal.classList.add('show');
+        
+        document.getElementById('modalDeleteBtn').onclick = function() {
+            executeDeleteBatch();
+        }
+    }
+
+    // 关闭删除弹窗
+    function closeDeleteModal() {
+        document.getElementById('deleteConfirmModal').classList.remove('show');
+        activeDeleteBatchId = null;
+    }
+
+    // 执行真正的删除动作
+    function executeDeleteBatch() {
+        if (activeDeleteBatchId !== null) {
+            batches = batches.filter(b => b.batchId !== activeDeleteBatchId);
             saveDataToStorage();
             renderBatches();
-            showToast('批次已删除');
+            closeDeleteModal();
+            showToast('已删除'); // 成功删除后的简约提示
         }
     }
 
@@ -932,6 +968,7 @@
                 bubbleOptsHtml += `<div class="color-opt" style="background-color: ${COLOR_MAP[colorKey]};" onclick="selectBatchColor(event, ${batch.batchId}, '${colorKey}')"></div>`;
             }
 
+            // 更新：将删除按钮移动至最右侧，放在复制按钮后面
             batchDiv.innerHTML = `
                 <div class="batch-header" ${headerBgStyle}>
                     <div class="batch-title-clickarea" onclick="toggleBatchBody(this, ${batch.batchId})">
@@ -949,8 +986,8 @@
                         </div>
                     </div>
                     <div class="batch-ops-group">
-                        <button class="btn-batch-delete" onclick="deleteSingleBatch(event, ${batch.batchId})">删除</button>
                         <button class="btn-batch-copy" onclick="copySingleBatchLinks(event, ${batch.batchId})">复制此批次</button>
+                        <button class="btn-batch-delete" onclick="openDeleteModal(event, ${batch.batchId})">删除</button>
                     </div>
                 </div>
                 <div class="batch-body ${collapsedClass}"></div>
