@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>test_tools</title>
+    <title>商品 ID 链接自动拼接工具</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -140,12 +140,26 @@
             font-size: 14px;
         }
         
+        /* 核心动画样式 */
         .batch-block {
             border-bottom: 1px solid #eee;
             background-color: #fff;
+            max-height: 800px; /* 给予一个足够大的安全高度 */
+            opacity: 1;
+            overflow: hidden;
+            transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, padding 0.35s ease;
         }
         .batch-block:last-child { 
             border-bottom: none; 
+        }
+
+        /* 触发删除时的动画类 */
+        .batch-block.removing {
+            max-height: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            opacity: 0 !important;
+            border-bottom: none !important;
         }
 
         .batch-header {
@@ -627,7 +641,7 @@
     let tempParsedItems = []; 
     let autoExtractedRemark = ""; 
     let tempSelectedColor = ""; 
-    let activeDeleteBatchId = null; // 用于记录当前正准备删除的批次
+    let activeDeleteBatchId = null; 
 
     window.onload = function() {
         initModalColors();
@@ -801,7 +815,6 @@
         showToast('复制状态已全部重置');
     }
 
-    // 唤起美化后的删除弹窗
     function openDeleteModal(event, batchId) {
         event.stopPropagation(); 
         activeDeleteBatchId = batchId;
@@ -813,20 +826,36 @@
         }
     }
 
-    // 关闭删除弹窗
     function closeDeleteModal() {
         document.getElementById('deleteConfirmModal').classList.remove('show');
         activeDeleteBatchId = null;
     }
 
-    // 执行真正的删除动作
+    // 核心更改：先执行平滑收缩动画，动画结束后再真正清理数据并重新渲染
     function executeDeleteBatch() {
         if (activeDeleteBatchId !== null) {
-            batches = batches.filter(b => b.batchId !== activeDeleteBatchId);
-            saveDataToStorage();
-            renderBatches();
+            // 根据 ID 找到对应的网页元素
+            const targetDom = document.getElementById(`batch-block-${activeDeleteBatchId}`);
             closeDeleteModal();
-            showToast('已删除'); // 成功删除后的简约提示
+            
+            if (targetDom) {
+                // 1. 添加 CSS 动画类（开始淡出、高度缩减归零）
+                targetDom.classList.add('removing');
+                
+                // 2. 等待 350ms 动画平滑结束后，再从底层数据删除并重绘
+                setTimeout(() => {
+                    batches = batches.filter(b => b.batchId !== activeDeleteBatchId);
+                    saveDataToStorage();
+                    renderBatches();
+                    showToast('已删除');
+                }, 350);
+            } else {
+                // 兜底：如果 DOM 没找到直接清理数据
+                batches = batches.filter(b => b.batchId !== activeDeleteBatchId);
+                saveDataToStorage();
+                renderBatches();
+                showToast('已删除');
+            }
         }
     }
 
@@ -954,6 +983,7 @@
             const batch = renderList[i];
             const batchDiv = document.createElement('div');
             batchDiv.className = 'batch-block';
+            batchDiv.id = `batch-block-${batch.batchId}`; // 新增：赋予唯一的 ID 以便进行精确动画捕捉
 
             const titleText = batch.remark; 
             const collapsedClass = batch.isCollapsed ? 'collapsed' : '';
@@ -968,7 +998,6 @@
                 bubbleOptsHtml += `<div class="color-opt" style="background-color: ${COLOR_MAP[colorKey]};" onclick="selectBatchColor(event, ${batch.batchId}, '${colorKey}')"></div>`;
             }
 
-            // 更新：将删除按钮移动至最右侧，放在复制按钮后面
             batchDiv.innerHTML = `
                 <div class="batch-header" ${headerBgStyle}>
                     <div class="batch-title-clickarea" onclick="toggleBatchBody(this, ${batch.batchId})">
