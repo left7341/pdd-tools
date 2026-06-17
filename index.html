@@ -106,13 +106,14 @@
             gap: 15px;
             align-items: center;
         }
-        .sort-control, .clear-control {
+        .sort-control, .clear-control, .reset-control {
             font-size: 13px;
             color: #86868b;
             cursor: pointer;
             user-select: none;
             transition: color 0.15s ease;
         }
+        .reset-control:hover { color: #007aff; }
         .sort-control:hover { color: #007aff; }
         .clear-control:hover { color: #ff3b30; }
 
@@ -175,10 +176,9 @@
             gap: 8px;
             flex: 1;
             padding-right: 15px;
-            position: relative; /* 为横向定位提供锚点 */
+            position: relative; 
         }
 
-        /* 标签颜色选择器区域样式 */
         .color-picker-wrapper {
             display: inline-flex;
             align-items: center;
@@ -201,14 +201,13 @@
             transform: scale(1.15);
         }
 
-        /* 颜色气泡弹窗 - 彻底重构：改为向右平铺的长条横格，绝不溢出上下边界 */
         .color-bubble-menu {
             position: absolute;
-            left: 24px; /* 在圆点右侧滑出 */
+            left: 24px; 
             top: 50%;
             transform: translateY(-50%);
             background: #fff;
-            border-radius: 20px; /* 圆角长条 */
+            border-radius: 20px; 
             box-shadow: 0 2px 10px rgba(0,0,0,0.12);
             padding: 4px 10px;
             display: none;
@@ -218,7 +217,7 @@
             border: 1px solid #e5e5e5;
         }
         .color-bubble-menu.show {
-            display: flex; /* 横向布局 */
+            display: flex; 
         }
         .color-opt {
             width: 18px;
@@ -259,7 +258,6 @@
             white-space: nowrap;
         }
 
-        /* 备注编辑状态输入框样式 */
         .batch-title-input {
             font-size: 13px;
             font-family: inherit;
@@ -274,7 +272,6 @@
             background: #fff;
         }
 
-        /* 编辑/保存按钮样式 */
         .btn-batch-edit {
             background: none;
             padding: 2px 8px;
@@ -314,6 +311,13 @@
             transition: transform 0.15s ease;
         }
         
+        .batch-ops-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
         .btn-batch-copy {
             background: none;
             padding: 5px 12px;
@@ -325,10 +329,26 @@
             transition: all 0.15s ease;
             color: #007aff;
             border: 1px solid #007aff;
-            flex-shrink: 0;
         }
         .btn-batch-copy:hover {
             background-color: #007aff;
+            color: white;
+        }
+
+        .btn-batch-delete {
+            background: none;
+            padding: 5px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+            color: #ff3b30;
+            border: 1px solid #ff3b30;
+        }
+        .btn-batch-delete:hover {
+            background-color: #ff3b30;
             color: white;
         }
 
@@ -446,7 +466,6 @@
         }
         .modal-content input:focus { border-color: #34c759; background-color: #fff; }
         
-        /* 弹窗颜色选择器样式 */
         .modal-color-section {
             margin-bottom: 25px;
         }
@@ -557,6 +576,7 @@
         <div class="section-header" style="margin-bottom: 12px;">
             <label style="font-weight: 500; font-size: 14px; color: #1d1d1f;">转换结果</label>
             <div class="controls-right">
+                <div class="reset-control" onclick="resetCopyStatus()">重置复制状态</div>
                 <div id="sortBtn" class="sort-control" onclick="toggleSortOrder()">最新在上</div>
                 <div class="clear-control" onclick="clearAllData()">清空缓存</div>
             </div>
@@ -749,6 +769,31 @@
         renderBatches(); 
     }
 
+    function resetCopyStatus() {
+        if (batches.length === 0) {
+            showToast('暂无历史数据', true);
+            return;
+        }
+        batches.forEach(batch => {
+            batch.items.forEach(item => {
+                item.isCopied = false;
+            });
+        });
+        saveDataToStorage();
+        renderBatches();
+        showToast('复制状态已全部重置');
+    }
+
+    function deleteSingleBatch(event, batchId) {
+        event.stopPropagation(); 
+        if (confirm('确认要删除这个批次吗？删除后不可恢复。')) {
+            batches = batches.filter(b => b.batchId !== batchId);
+            saveDataToStorage();
+            renderBatches();
+            showToast('批次已删除');
+        }
+    }
+
     function toggleBatchBody(headerClickAreaElement, batchId) {
         if (headerClickAreaElement.querySelector('.batch-title-input')) {
             return;
@@ -903,7 +948,10 @@
                             <span class="fold-icon" ${iconStyle}>▶</span>
                         </div>
                     </div>
-                    <button class="btn-batch-copy" onclick="copySingleBatchLinks(event, ${batch.batchId})">复制此批次</button>
+                    <div class="batch-ops-group">
+                        <button class="btn-batch-delete" onclick="deleteSingleBatch(event, ${batch.batchId})">删除</button>
+                        <button class="btn-batch-copy" onclick="copySingleBatchLinks(event, ${batch.batchId})">复制此批次</button>
+                    </div>
                 </div>
                 <div class="batch-body ${collapsedClass}"></div>
             `;
