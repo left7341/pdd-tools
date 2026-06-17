@@ -140,11 +140,11 @@
             font-size: 14px;
         }
         
-        /* 优化后的平滑收缩动画样式 */
+        /* 平滑收缩动画样式 */
         .batch-block {
             border-bottom: 1px solid #eee;
             background-color: #fff;
-            max-height: 1200px; /* 调大安全高度，确保展开时内容不会被截断 */
+            max-height: 1200px; 
             opacity: 1;
             overflow: hidden;
             transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, padding 0.3s ease, margin 0.3s ease;
@@ -153,7 +153,7 @@
             border-bottom: none; 
         }
 
-        /* 精准拦截动画类 */
+        /* 动画触发状态 */
         .batch-block.removing {
             max-height: 0 !important;
             padding-top: 0 !important;
@@ -162,7 +162,7 @@
             margin-bottom: 0 !important;
             opacity: 0 !important;
             border-bottom: none !important;
-            pointer-events: none; /* 动画期间禁止交互 */
+            pointer-events: none; 
         }
 
         .batch-header {
@@ -834,28 +834,29 @@
         activeDeleteBatchId = null;
     }
 
-    // 重构核心：同步将数据在当前线程彻底清洗并缓存，通过真实重绘来配合动画，杜绝错页冒出现象
+    // 已完全修复：提前锁定局部变量 idToDelete，保证弹窗状态清除不干扰核心数据过滤
     function executeDeleteBatch() {
         if (activeDeleteBatchId !== null) {
-            const targetDom = document.getElementById(`batch-block-${activeDeleteBatchId}`);
-            closeDeleteModal();
+            const idToDelete = activeDeleteBatchId; // 🌟 关键修复：提前锁死要删除的ID
+            const targetDom = document.getElementById(`batch-block-${idToDelete}`);
+            
+            closeDeleteModal(); // 此时把全局 activeDeleteBatchId 重置为 null 也没关系了
             
             if (targetDom) {
-                // 1. 触发收纳渐隐动画
+                // 1. 触发渐隐收缩动画
                 targetDom.classList.add('removing');
                 
-                // 2. 动画开始的同时，在底层先把数据从内存中剔除并存入 localStorage 锁死它
-                batches = batches.filter(b => b.batchId !== activeDeleteBatchId);
+                // 2. 同步从底层数据源和缓存中彻底切掉
+                batches = batches.filter(b => b.batchId !== idToDelete);
                 saveDataToStorage();
                 
-                // 3. 等待收纳过渡动画完毕（300ms），再干净利落地重新进行 DOM 列表重绘
+                // 3. 等待收纳动画过渡完毕后（300ms），完美重绘DOM
                 setTimeout(() => {
                     renderBatches();
                     showToast('已删除');
                 }, 300);
             } else {
-                // 兜底：DOM不匹配时直接静默切数据刷新
-                batches = batches.filter(b => b.batchId !== activeDeleteBatchId);
+                batches = batches.filter(b => b.batchId !== idToDelete);
                 saveDataToStorage();
                 renderBatches();
                 showToast('已删除');
